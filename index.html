@@ -489,54 +489,47 @@ function subscribeVouchers(){
 
 async function createVoucher(code, prizeIndex){
   code = code.trim().toUpperCase();
+
   if(!code) throw new Error("EMPTY_CODE");
+
   const prizeLabel = PRIZES[prizeIndex].label;
 
   if(demoMode){
     const list = loadDemoVouchers();
-    if(list.some(v=>v.code===code)) throw new Error("DUPLICATE");
-    list.unshift({ code, used:false, prizeIndex, prizeLabel, createdAt: new Date().toISOString() });
-    saveDemoVouchers(list);
-    renderAll(list);
-    return;
-  }
 
-  const ref = fs.doc(db, "vouchers", code);
-  await fs.runTransaction(db, async (tx)=>{
-    const snap = await tx.get(ref);
-    if(snap.exists()) throw new Error("DUPLICATE");
-    tx.set(ref, {
-      used:false,
+    if(list.some(v => v.code === code)){
+      throw new Error("DUPLICATE");
+    }
+
+    list.unshift({
+      code,
+      used: false,
       prizeIndex,
       prizeLabel,
-      createdAt: fs.serverTimestamp(),
+      createdAt: new Date().toISOString()
     });
-  });
-}
 
-async function createVouchersBulk(codes, prizeIndex){
-  const prizeLabel = PRIZES[prizeIndex].label;
-  if(demoMode){
-    const list = loadDemoVouchers();
-    const existing = new Set(list.map(v=>v.code));
-    codes.forEach(code=>{
-      if(!existing.has(code)){
-        list.unshift({ code, used:false, prizeIndex, prizeLabel, createdAt: new Date().toISOString() });
-        existing.add(code);
-      }
-    });
     saveDemoVouchers(list);
     renderAll(list);
     return;
   }
-  // batch tulis, dipecah tiap 400 dokumen agar aman dari batas 500
-  for(let i=0;i<codes.length;i+=400){
-    const chunk = codes.slice(i, i+400);
-    const batch = fs.writeBatch(db);
-    chunk.forEach(code=>{
-      const ref = fs.doc(db, "vouchers", code);
-      batch.set(ref, { used:false, prizeIndex, prizeLabel, createdAt: fs.serverTimestamp() });
-    });
+
+  // Cek apakah kode sudah ada
+  const ref = fs.doc(db, "vouchers", code);
+  const snap = await fs.getDoc(ref);
+
+  if(snap.exists()){
+    throw new Error("DUPLICATE");
+  }
+
+  // Simpan voucher langsung
+  await fs.setDoc(ref, {
+    used: false,
+    prizeIndex: prizeIndex,
+    prizeLabel: prizeLabel,
+    createdAt: fs.serverTimestamp()
+  });
+}
     await batch.commit();
   }
 }
@@ -651,14 +644,8 @@ document.getElementById("singleForm").addEventListener("submit", async (e)=>{
     codeInput.value = "";
     showToast(`Kode ${code} ditambahkan`);
   }catch(err){
-  console.error("ERROR VOUCHER:", err);
-
-  msg.className = "form-msg err";
-
-  if (err.message === "DUPLICATE") {
-    msg.textContent = "Kode sudah ada, gunakan kode lain.";
-  } else {
-    msg.textContent = "Gagal: " + (err.code || err.message);
+    msg.className = "form-msg err";
+    msg.textContent = err.message === "DUPLICATE" ? "Kode sudah ada, gunakan kode lain." : "Gagal menyimpan kode.";
   }
 });
 
