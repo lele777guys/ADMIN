@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admin — Undian Merdeka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0b0f1e;
+    --navy-2:#131a30;
+    --panel-bg:#121a30;
+    --red:#c8102e;
+    --red-deep:#7a0a1c;
+    --gold:#e8b23c;
+    --gold-soft:#f2d489;
+    --cream:#f5efe0;
+    --green:#5fbf7f;
+    --line:rgba(232,178,60,.18);
+    --line-soft:rgba(245,239,224,.12);
+    --muted:#8c92ab;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c2440 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 110%, #3a0d16 0%, transparent 45%),
+      linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 55%, #05070f 100%);
+    color:var(--cream);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Fraunces', serif; margin:0; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ---------------- Login ---------------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:min(380px, 100%);
+    background:var(--panel-bg);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:32px 26px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.6);
+  }
+  .login-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:.3em; font-size:11px; text-transform:uppercase;
+    color:var(--gold-soft); text-align:center; margin-bottom:8px;
+  }
+  .login-card h1{
+    font-size:26px; font-weight:800; text-align:center; margin-bottom:6px;
+  }
+  .login-card p{
+    font-size:13px; color:var(--muted); text-align:center; margin:0 0 22px;
+    line-height:1.5;
+  }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:6px; font-family:'JetBrains Mono', monospace;
+  }
+  .field input, .field select{
+    width:100%;
+    background:#0d1224;
+    border:1px solid var(--line-soft);
+    border-radius:9px;
+    padding:11px 12px;
+    color:var(--cream);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:14px;
+    outline:none;
+  }
+  .field input:focus, .field select:focus{
+    border-color:var(--gold); box-shadow:0 0 0 3px rgba(232,178,60,.15);
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:1px solid rgba(232,178,60,.5);
+    border-radius:9px;
+    padding:11px 16px;
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-weight:700; font-size:13.5px;
+    cursor:pointer;
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn-primary{
+    background:linear-gradient(180deg, var(--red) 0%, var(--red-deep) 100%);
+    color:var(--cream); width:100%;
+  }
+  .btn-primary:hover{ filter:brightness(1.1); }
+  .btn-ghost{
+    background:transparent; color:var(--gold-soft); border-color:var(--line);
+  }
+  .btn-ghost:hover{ background:rgba(232,178,60,.08); }
+  .btn-sm{ padding:7px 10px; font-size:12px; border-radius:7px; }
+  .btn-danger{ border-color:rgba(255,107,107,.4); color:#ff9b9b; background:transparent; }
+  .btn-danger:hover{ background:rgba(255,107,107,.1); }
+
+  .form-msg{ min-height:18px; font-size:12.5px; text-align:center; margin-top:12px; }
+  .form-msg.err{ color:#ff8b8b; }
+  .form-msg.ok{ color:#8fd19e; }
+
+  .demo-banner{
+    margin-top:18px; padding:10px 12px; border-radius:9px;
+    background:rgba(232,178,60,.08); border:1px dashed rgba(232,178,60,.35);
+    font-size:11.5px; color:var(--gold-soft); line-height:1.5; text-align:center;
+  }
+
+  /* ---------------- Dashboard ---------------- */
+  #dashboard{ display:none; max-width:1180px; margin:0 auto; padding:26px 20px 60px; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; margin-bottom:26px; flex-wrap:wrap;
+  }
+  .topbar-title{ display:flex; flex-direction:column; gap:4px; }
+  .topbar-eyebrow{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:.25em;
+    text-transform:uppercase; color:var(--gold-soft);
+  }
+  .topbar-title h1{ font-size:24px; font-weight:800; }
+  .topbar-right{ display:flex; align-items:center; gap:10px; }
+  .user-pill{
+    font-size:12px; color:var(--muted); font-family:'JetBrains Mono', monospace;
+    padding:8px 12px; border:1px solid var(--line-soft); border-radius:999px;
+  }
+
+  .stats{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:22px;
+  }
+  .stat-card{
+    background:var(--panel-bg); border:1px solid var(--line-soft); border-radius:14px;
+    padding:16px 18px;
+  }
+  .stat-card .num{ font-family:'Fraunces', serif; font-weight:800; font-size:28px; }
+  .stat-card .lbl{
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    margin-top:4px; font-family:'JetBrains Mono', monospace;
+  }
+  .stat-card.available .num{ color:var(--gold-soft); }
+  .stat-card.used .num{ color:var(--muted); }
+  .stat-card.total .num{ color:var(--cream); }
+  .stat-card.grand .num{ color:var(--green); }
+
+  .grid{ display:grid; grid-template-columns:340px 1fr; gap:18px; align-items:start; }
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--line-soft); border-radius:16px;
+    padding:20px;
+  }
+  .panel h2{ font-size:16px; font-weight:700; margin-bottom:4px; }
+  .panel .sub{ font-size:12px; color:var(--muted); margin-bottom:16px; }
+
+  .tabs{ display:flex; gap:6px; margin-bottom:16px; background:#0d1224; padding:4px; border-radius:10px; }
+  .tab{
+    flex:1; text-align:center; padding:8px 10px; border-radius:8px; cursor:pointer;
+    font-size:12.5px; font-weight:600; color:var(--muted);
+  }
+  .tab.active{ background:var(--red); color:var(--cream); }
+
+  .prize-preview{
+    display:flex; align-items:center; gap:8px; margin-top:4px;
+    font-size:11.5px; color:var(--muted); padding:8px 10px;
+    border:1px dashed var(--line-soft); border-radius:8px;
+  }
+  .prize-swatch{ width:10px; height:10px; border-radius:3px; background:var(--gold); flex-shrink:0; }
+
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  thead th{
+    text-align:left; padding:10px 10px; font-size:10.5px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted); font-family:'JetBrains Mono', monospace;
+    border-bottom:1px solid var(--line-soft); white-space:nowrap;
+  }
+  tbody td{
+    padding:10px 10px; border-bottom:1px solid rgba(245,239,224,.06); vertical-align:middle;
+  }
+  tbody tr:hover{ background:rgba(232,178,60,.04); }
+  .code-cell{ font-family:'JetBrains Mono', monospace; font-weight:700; letter-spacing:.04em; }
+  .badge{
+    display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:700;
+  }
+  .badge.avail{ background:rgba(232,178,60,.15); color:var(--gold-soft); }
+  .badge.used{ background:rgba(140,146,171,.15); color:var(--muted); }
+  .row-actions{ display:flex; gap:6px; }
+  .filters{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .filters input, .filters select{
+    background:#0d1224; border:1px solid var(--line-soft); border-radius:8px;
+    padding:8px 10px; color:var(--cream); font-size:12.5px; font-family:'Plus Jakarta Sans', sans-serif;
+  }
+  .filters input{ flex:1; min-width:140px; }
+  .table-head-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+  .empty-state{ text-align:center; padding:36px 10px; color:var(--muted); font-size:13px; }
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:#0d1224; border:1px solid var(--gold); color:var(--cream);
+    padding:11px 18px; border-radius:10px; font-size:13px; font-weight:600;
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:860px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+    .grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-eyebrow">Undian Merdeka</div>
+    <h1>Panel Admin</h1>
+    <p>Masuk untuk mengelola kode voucher dan hadiah yang tersimpan di Firebase.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Kata sandi</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary" type="submit" id="loginBtn">Masuk</button>
+      <div class="form-msg err" id="loginMsg"></div>
+    </form>
+    <div class="demo-banner" id="demoBanner" style="display:none;">
+      Mode demo aktif (Firebase belum dikonfigurasi). Data disimpan sementara di browser ini saja.
+      Masukkan email &amp; kata sandi apa pun untuk masuk.
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="topbar-title">
+      <div class="topbar-eyebrow">Dirgahayu Republik Indonesia</div>
+      <h1>Kelola Kode &amp; Hadiah</h1>
+    </div>
+    <div class="topbar-right">
+      <span class="user-pill" id="userPill">—</span>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Keluar</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card total"><div class="num" id="statTotal">0</div><div class="lbl">Total Kode</div></div>
+    <div class="stat-card available"><div class="num" id="statAvail">0</div><div class="lbl">Belum Dipakai</div></div>
+    <div class="stat-card used"><div class="num" id="statUsed">0</div><div class="lbl">Sudah Dipakai</div></div>
+    <div class="stat-card grand"><div class="num" id="statGrand">0</div><div class="lbl">Grand Prize Tersisa</div></div>
+  </div>
+
+  <div class="grid">
+    <!-- Tambah kode -->
+    <div class="panel">
+      <h2>Tambah Kode Voucher</h2>
+      <div class="sub">Setiap kode terhubung langsung ke koleksi <span class="mono">vouchers</span> di Firestore.</div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="single">Satu Kode</div>
+        <div class="tab" data-tab="bulk">Buat Massal</div>
+      </div>
+
+      <form id="singleForm">
+        <div class="field">
+          <label for="singleCode">Kode voucher</label>
+          <input id="singleCode" class="mono" placeholder="MERDEKA81" maxlength="24" style="text-transform:uppercase;">
+        </div>
+        <div class="field">
+          <label for="singlePrize">Hadiah</label>
+          <select id="singlePrize"></select>
+        </div>
+        <button class="btn btn-primary" type="submit">Tambah Kode</button>
+        <div class="form-msg" id="singleMsg"></div>
+      </form>
+
+      <form id="bulkForm" style="display:none;">
+        <div class="field">
+          <label for="bulkPrefix">Awalan kode (opsional)</label>
+          <input id="bulkPrefix" class="mono" placeholder="MERDEKA" maxlength="12" style="text-transform:uppercase;">
+        </div>
+        <div class="field">
+          <label for="bulkCount">Jumlah kode</label>
+          <input id="bulkCount" type="number" min="1" max="200" value="10">
+        </div>
+        <div class="field">
+          <label for="bulkPrize">Hadiah</label>
+          <select id="bulkPrize"></select>
+        </div>
+        <button class="btn btn-primary" type="submit">Buat Kode Massal</button>
+        <div class="form-msg" id="bulkMsg"></div>
+      </form>
+    </div>
+
+    <!-- Daftar kode -->
+    <div class="panel">
+      <div class="table-head-row">
+        <h2>Daftar Kode</h2>
+        <button class="btn btn-ghost btn-sm" id="exportBtn">Ekspor CSV</button>
+      </div>
+      <div class="sub">Diperbarui langsung — data akan berubah otomatis begitu kode dipakai di halaman undian.</div>
+
+      <div class="filters">
+        <input id="searchInput" placeholder="Cari kode…">
+        <select id="statusFilter">
+          <option value="all">Semua status</option>
+          <option value="avail">Belum dipakai</option>
+          <option value="used">Sudah dipakai</option>
+        </select>
+        <select id="prizeFilter">
+          <option value="all">Semua hadiah</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Kode</th>
+              <th>Hadiah</th>
+              <th>Status</th>
+              <th>Dibuat</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">Belum ada kode. Tambahkan kode pertama di panel kiri.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+/* =========================================================================
+   PANEL ADMIN — UNDIAN MERDEKA
+   =========================================================================
+   1) Isi FIREBASE_CONFIG dengan kredensial PROYEK YANG SAMA dengan halaman
+      undian publik, supaya keduanya membaca/menulis koleksi "vouchers" yang
+      sama persis.
+   2) Di Firebase Console → Authentication → Sign-in method, aktifkan
+      "Email/Password", lalu buat akun admin (Authentication → Users → Add user).
+      Hanya email yang terdaftar di sana yang bisa masuk ke panel ini.
+   3) Susunan PRIZES di bawah HARUS sama persis (urutan & isi) dengan array
+      PRIZES di halaman undian publik — prizeIndex mengacu ke posisi LED
+      yang sama di roda.
+   4) Rekomendasi Firestore Security Rules, supaya publik hanya boleh
+      membaca/mengklaim kode (bukan mengubah hadiah), sementara admin yang
+      login lewat panel ini boleh menulis bebas:
+
+      rules_version = '2';
+      service cloud.firestore {
+        match /databases/{database}/documents {
+          match /vouchers/{code} {
+            allow get: if true;
+            allow list: if request.auth != null;
+            allow create, delete: if request.auth != null;
+            allow update: if request.auth != null
+              || (request.resource.data.used == true
+                  && resource.data.used == false
+                  && request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['used','usedAt']));
+          }
+        }
+      }
+   ========================================================================= */
+
+const FIREBASE_CONFIG = {
+  apiKey: "GANTI_DENGAN_API_KEY",
+  authDomain: "GANTI.firebaseapp.com",
+  projectId: "GANTI_PROJECT_ID",
+  storageBucket: "GANTI.appspot.com",
+  messagingSenderId: "GANTI_SENDER_ID",
+  appId: "GANTI_APP_ID"
+};
+
+// HARUS sama persis dengan halaman undian publik (index 0 = LED pertama, searah jarum jam dari atas)
+const PRIZES = [
+  { label: "Sembako", sub: "Paket Sembako" },
+  { label: "Voucher 50rb", sub: "E-Wallet" },
+  { label: "Kaos Merdeka", sub: "Merchandise" },
+  { label: "Voucher 100rb", sub: "E-Wallet" },
+  { label: "Tumbler Edisi 17-8", sub: "Merchandise" },
+  { label: "Voucher 250rb", sub: "E-Wallet" },
+  { label: "Payung Merah Putih", sub: "Merchandise" },
+  { label: "Grand Prize", sub: "Hadiah Utama" },
+];
+const GRAND_PRIZE_INDEX = PRIZES.length - 1;
+
+/* ---------------- State ---------------- */
+let db = null, fs = null, auth = null, authMod = null;
+let demoMode = false;
+let vouchers = []; // { code, used, prizeIndex, prizeLabel, createdAt }
+let currentUserEmail = "";
+
+/* ---------------- Firebase init ---------------- */
+async function initFirebase(){
+  try{
+    const [{ initializeApp }, firestore, authLib] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
+    ]);
+    fs = firestore; authMod = authLib;
+    const app = initializeApp(FIREBASE_CONFIG);
+    db = fs.getFirestore(app);
+    auth = authMod.getAuth(app);
+
+    authMod.onAuthStateChanged(auth, (user)=>{
+      if(user){ currentUserEmail = user.email || "admin"; enterDashboard(); }
+      else{ showLogin(); }
+    });
+  }catch(err){
+    console.warn("Firebase belum terhubung — panel berjalan dalam MODE DEMO.", err);
+    demoMode = true;
+    document.getElementById("demoBanner").style.display = "block";
+    showLogin();
+  }
+}
+
+/* ---------------- Auth actions ---------------- */
+async function doLogin(email, password){
+  if(demoMode){
+    currentUserEmail = email || "demo@admin";
+    localStorage.setItem("adminDemoUser", currentUserEmail);
+    enterDashboard();
+    return;
+  }
+  await authMod.signInWithEmailAndPassword(auth, email, password);
+}
+async function doLogout(){
+  if(demoMode){
+    localStorage.removeItem("adminDemoUser");
+    showLogin();
+    return;
+  }
+  await authMod.signOut(auth);
+}
+
+/* ---------------- Data layer (Firestore or localStorage demo) ---------------- */
+function loadDemoVouchers(){
+  return JSON.parse(localStorage.getItem("demoVouchersAdmin") || "[]");
+}
+function saveDemoVouchers(list){
+  localStorage.setItem("demoVouchersAdmin", JSON.stringify(list));
+}
+
+let unsubscribeSnapshot = null;
+function subscribeVouchers(){
+  if(demoMode){
+    renderAll(loadDemoVouchers());
+    return;
+  }
+  const q = fs.query(fs.collection(db, "vouchers"), fs.orderBy("createdAt", "desc"));
+  unsubscribeSnapshot = fs.onSnapshot(q, (snap)=>{
+    const list = [];
+    snap.forEach(docSnap=>{
+      const d = docSnap.data();
+      list.push({
+        code: docSnap.id,
+        used: !!d.used,
+        prizeIndex: typeof d.prizeIndex === "number" ? d.prizeIndex : null,
+        prizeLabel: d.prizeLabel || (PRIZES[d.prizeIndex]?.label ?? "—"),
+        createdAt: d.createdAt?.toDate ? d.createdAt.toDate() : null,
+      });
+    });
+    renderAll(list);
+  }, (err)=>{
+    console.error(err);
+    showToast("Gagal memuat data dari Firestore. Cek kredensial & aturan keamanan.");
+  });
+}
+
+async function createVoucher(code, prizeIndex){
+  code = code.trim().toUpperCase();
+  if(!code) throw new Error("EMPTY_CODE");
+  const prizeLabel = PRIZES[prizeIndex].label;
+
+  if(demoMode){
+    const list = loadDemoVouchers();
+    if(list.some(v=>v.code===code)) throw new Error("DUPLICATE");
+    list.unshift({ code, used:false, prizeIndex, prizeLabel, createdAt: new Date().toISOString() });
+    saveDemoVouchers(list);
+    renderAll(list);
+    return;
+  }
+
+  const ref = fs.doc(db, "vouchers", code);
+  await fs.runTransaction(db, async (tx)=>{
+    const snap = await tx.get(ref);
+    if(snap.exists()) throw new Error("DUPLICATE");
+    tx.set(ref, {
+      used:false,
+      prizeIndex,
+      prizeLabel,
+      createdAt: fs.serverTimestamp(),
+    });
+  });
+}
+
+async function createVouchersBulk(codes, prizeIndex){
+  const prizeLabel = PRIZES[prizeIndex].label;
+  if(demoMode){
+    const list = loadDemoVouchers();
+    const existing = new Set(list.map(v=>v.code));
+    codes.forEach(code=>{
+      if(!existing.has(code)){
+        list.unshift({ code, used:false, prizeIndex, prizeLabel, createdAt: new Date().toISOString() });
+        existing.add(code);
+      }
+    });
+    saveDemoVouchers(list);
+    renderAll(list);
+    return;
+  }
+  // batch tulis, dipecah tiap 400 dokumen agar aman dari batas 500
+  for(let i=0;i<codes.length;i+=400){
+    const chunk = codes.slice(i, i+400);
+    const batch = fs.writeBatch(db);
+    chunk.forEach(code=>{
+      const ref = fs.doc(db, "vouchers", code);
+      batch.set(ref, { used:false, prizeIndex, prizeLabel, createdAt: fs.serverTimestamp() });
+    });
+    await batch.commit();
+  }
+}
+
+async function deleteVoucher(code){
+  if(demoMode){
+    const list = loadDemoVouchers().filter(v=>v.code!==code);
+    saveDemoVouchers(list);
+    renderAll(list);
+    return;
+  }
+  await fs.deleteDoc(fs.doc(db, "vouchers", code));
+}
+
+async function resetVoucher(code){
+  if(demoMode){
+    const list = loadDemoVouchers().map(v=> v.code===code ? {...v, used:false} : v);
+    saveDemoVouchers(list);
+    renderAll(list);
+    return;
+  }
+  await fs.updateDoc(fs.doc(db, "vouchers", code), { used:false, usedAt: fs.deleteField() });
+}
+
+/* ---------------- Random code generator ---------------- */
+function randomSuffix(len=5){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // tanpa karakter ambigu
+  let out = "";
+  for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+
+/* ---------------- UI wiring ---------------- */
+const loginScreen = document.getElementById("loginScreen");
+const dashboard = document.getElementById("dashboard");
+const loginForm = document.getElementById("loginForm");
+const loginMsg = document.getElementById("loginMsg");
+const loginBtn = document.getElementById("loginBtn");
+const userPill = document.getElementById("userPill");
+
+function showLogin(){
+  loginScreen.style.display = "flex";
+  dashboard.style.display = "none";
+  if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+}
+function enterDashboard(){
+  loginScreen.style.display = "none";
+  dashboard.style.display = "block";
+  userPill.textContent = currentUserEmail;
+  subscribeVouchers();
+}
+
+loginForm.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  loginMsg.textContent = "";
+  loginBtn.disabled = true;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  try{
+    await doLogin(email, password);
+  }catch(err){
+    console.error(err);
+    loginMsg.textContent = "Email atau kata sandi salah.";
+  }finally{
+    loginBtn.disabled = false;
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", doLogout);
+
+// Isi dropdown hadiah
+function fillPrizeSelect(sel, withAllOption){
+  sel.innerHTML = "";
+  if(withAllOption){
+    const opt = document.createElement("option");
+    opt.value = "all"; opt.textContent = "Semua hadiah";
+    sel.appendChild(opt);
+  }
+  PRIZES.forEach((p, i)=>{
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `${p.label} (${p.sub})`;
+    sel.appendChild(opt);
+  });
+}
+fillPrizeSelect(document.getElementById("singlePrize"), false);
+fillPrizeSelect(document.getElementById("bulkPrize"), false);
+fillPrizeSelect(document.getElementById("prizeFilter"), true);
+
+// Tabs tambah kode
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    const isSingle = tab.dataset.tab === "single";
+    document.getElementById("singleForm").style.display = isSingle ? "block" : "none";
+    document.getElementById("bulkForm").style.display = isSingle ? "none" : "block";
+  });
+});
+
+// Form satu kode
+document.getElementById("singleForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById("singleMsg");
+  const codeInput = document.getElementById("singleCode");
+  const prizeIndex = Number(document.getElementById("singlePrize").value);
+  const code = codeInput.value.trim().toUpperCase() || ("MERDEKA-" + randomSuffix());
+  msg.className = "form-msg"; msg.textContent = "Menyimpan…";
+  try{
+    await createVoucher(code, prizeIndex);
+    msg.className = "form-msg ok"; msg.textContent = `Kode ${code} berhasil ditambahkan.`;
+    codeInput.value = "";
+    showToast(`Kode ${code} ditambahkan`);
+  }catch(err){
+    msg.className = "form-msg err";
+    msg.textContent = err.message === "DUPLICATE" ? "Kode sudah ada, gunakan kode lain." : "Gagal menyimpan kode.";
+  }
+});
+
+// Form massal
+document.getElementById("bulkForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById("bulkMsg");
+  const prefix = document.getElementById("bulkPrefix").value.trim().toUpperCase();
+  const count = Math.max(1, Math.min(200, Number(document.getElementById("bulkCount").value) || 1));
+  const prizeIndex = Number(document.getElementById("bulkPrize").value);
+
+  const existingCodes = new Set(vouchers.map(v=>v.code));
+  const codes = [];
+  let guard = 0;
+  while(codes.length < count && guard < count*20){
+    guard++;
+    const c = (prefix ? prefix + "-" : "") + randomSuffix();
+    if(!existingCodes.has(c) && !codes.includes(c)) codes.push(c);
+  }
+
+  msg.className = "form-msg"; msg.textContent = "Membuat kode…";
+  try{
+    await createVouchersBulk(codes, prizeIndex);
+    msg.className = "form-msg ok"; msg.textContent = `${codes.length} kode berhasil dibuat.`;
+    showToast(`${codes.length} kode baru dibuat`);
+  }catch(err){
+    console.error(err);
+    msg.className = "form-msg err"; msg.textContent = "Gagal membuat kode massal.";
+  }
+});
+
+// Tabel: render + filter
+const tableBody = document.getElementById("tableBody");
+const emptyState = document.getElementById("emptyState");
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const prizeFilter = document.getElementById("prizeFilter");
+
+function fmtDate(d){
+  if(!d) return "—";
+  const date = (d instanceof Date) ? d : new Date(d);
+  if(isNaN(date)) return "—";
+  return date.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" });
+}
+
+function renderAll(list){
+  vouchers = list.map(v=> v.createdAt && !(v.createdAt instanceof Date) ? {...v, createdAt:new Date(v.createdAt)} : v);
+  renderStats();
+  renderTable();
+}
+
+function renderStats(){
+  const total = vouchers.length;
+  const used = vouchers.filter(v=>v.used).length;
+  const avail = total - used;
+  const grandLeft = vouchers.filter(v=>v.prizeIndex===GRAND_PRIZE_INDEX && !v.used).length;
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statUsed").textContent = used;
+  document.getElementById("statAvail").textContent = avail;
+  document.getElementById("statGrand").textContent = grandLeft;
+}
+
+function renderTable(){
+  const term = searchInput.value.trim().toUpperCase();
+  const statusVal = statusFilter.value;
+  const prizeVal = prizeFilter.value;
+
+  const filtered = vouchers.filter(v=>{
+    if(term && !v.code.includes(term)) return false;
+    if(statusVal==="avail" && v.used) return false;
+    if(statusVal==="used" && !v.used) return false;
+    if(prizeVal!=="all" && String(v.prizeIndex)!==prizeVal) return false;
+    return true;
+  });
+
+  tableBody.innerHTML = "";
+  emptyState.style.display = filtered.length ? "none" : "block";
+
+  filtered.forEach(v=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="code-cell">${v.code}</td>
+      <td>${v.prizeLabel}</td>
+      <td><span class="badge ${v.used ? 'used' : 'avail'}">${v.used ? 'Terpakai' : 'Tersedia'}</span></td>
+      <td class="mono" style="color:var(--muted); font-size:12px;">${fmtDate(v.createdAt)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn btn-ghost btn-sm" data-action="copy" data-code="${v.code}">Salin</button>
+          ${v.used ? `<button class="btn btn-ghost btn-sm" data-action="reset" data-code="${v.code}">Reset</button>` : ""}
+          <button class="btn btn-danger btn-sm" data-action="delete" data-code="${v.code}">Hapus</button>
+        </div>
+      </td>`;
+    tableBody.appendChild(tr);
+  });
+}
+
+tableBody.addEventListener("click", async (e)=>{
+  const btn = e.target.closest("button[data-action]");
+  if(!btn) return;
+  const code = btn.dataset.code;
+  const action = btn.dataset.action;
+
+  if(action === "copy"){
+    navigator.clipboard?.writeText(code);
+    showToast(`Kode ${code} disalin`);
+  }
+  if(action === "delete"){
+    if(!confirm(`Hapus kode ${code}? Tindakan ini tidak bisa dibatalkan.`)) return;
+    try{ await deleteVoucher(code); showToast(`Kode ${code} dihapus`); }
+    catch(err){ console.error(err); showToast("Gagal menghapus kode"); }
+  }
+  if(action === "reset"){
+    try{ await resetVoucher(code); showToast(`Kode ${code} direset ke belum dipakai`); }
+    catch(err){ console.error(err); showToast("Gagal mereset kode"); }
+  }
+});
+
+[searchInput, statusFilter, prizeFilter].forEach(el=>{
+  el.addEventListener("input", renderTable);
+  el.addEventListener("change", renderTable);
+});
+
+// Ekspor CSV
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  const rows = [["Kode","Hadiah","Status","Dibuat"]];
+  vouchers.forEach(v=>{
+    rows.push([v.code, v.prizeLabel, v.used ? "Terpakai" : "Tersedia", fmtDate(v.createdAt)]);
+  });
+  const csv = rows.map(r=> r.map(cell=> `"${String(cell).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "kode-voucher-undian-merdeka.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Toast
+let toastTimer = null;
+function showToast(text){
+  const t = document.getElementById("toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove("show"), 2400);
+}
+
+/* ---------------- Boot ---------------- */
+initFirebase().then(()=>{
+  if(demoMode){
+    const saved = localStorage.getItem("adminDemoUser");
+    if(saved){ currentUserEmail = saved; enterDashboard(); }
+  }
+});
+</script>
+</body>
+</html>
